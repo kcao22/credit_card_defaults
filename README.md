@@ -79,17 +79,10 @@ The variance of ROC curves for each split is displayed below for the range of 'C
 
 ### Decision Tree & Random Forest
 
-Next, a single decision tree model is explored. 
-The training data is then used to fit a OneHotEncoder before the encoder transforms the test set data. OneHotEncoder is employed here to ensure that dummy variable columns match between train and test datasets.
+Next, a single decision tree model is explored. Cross validation with a range of 'max_depth' values ranging between 1 and 12 are explored. To prevent obvious scenarios of overfitting, the max leaves are considered relative to the maxiumum number of positive samples. Given that the 'max_depth' is limited to a level of 12. Given that there are  
 
-Validation curves are plotted for a range of values for the following Random Forest Regressor parameters:
 
-  - n_estimators
-  - max_depth
-  - min_samples_split
-  - min_samples_leaf
-  - max_features
-
+In the 
 This provides insight on ballpark ranges for optimizing each parameter and ensuring no overfitting occurs. Below is an example of overfitting for a parameter.
 
 ![alt text](https://github.com/kcao22/webscraping_ds_salaries/blob/main/images/max_depth%20overfitting.png "Outliers")
