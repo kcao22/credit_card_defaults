@@ -60,6 +60,8 @@ Further, a deeper dive into the 'LIMIT_BAL' feature shows that accounts with hig
 
 ## Machine Learning Model Exploration & Selection
 
+Each model will explore hyperparameter optimization using a variety of visualizations and calculations. Below is a brief description for various models explored and a few hyperparameters optimized.
+
 ### Logistic Regression
 With the dataset cleaned and some surface level univariate feature exploration performed, I begin with the basic logistic regression model for binary classification.
 
@@ -67,31 +69,60 @@ First, I examine if an important feature such as 'PAY_1' exhibits a linear relat
 
 ![Alt text](https://github.com/kcao22/credit_card_defaults/blob/main/Visualizations/log_odds_linear_or_nonlinear.png)
 
-As an example, the 'C' hyperparameter is optimized via cross validation methods. For each split in the cross validation process, a new 'C' hyperparameter is set for the pipeline logistic regression model and can be seen in the visual below. Overfitting begins to occur after ~ 10**-1. 
+As an example, the 'C' hyperparameter is optimized via cross validation methods. For each split in the cross validation process, a new 'C' hyperparameter is set for the pipeline logistic regression model and can be seen in the visual below. Overfitting begins to occur after a 'C' value of ~ 10**-1. 
 
 ![Alt text](https://github.com/kcao22/credit_card_defaults/blob/main/Visualizations/overfitting_example_c_hyperparameter.png)
 
-For logistic regression, a high ROC AUC value of ~0.73 is observed after hyperparameter tuning.
+For logistic regression, a higher ROC AUC value of ~0.73 is observed after hyperparameter tuning, with previous ROC AUC values of ~0.71 prior to 'C' hyperparameter tuning. 
 
 The variance of ROC curves for each split is displayed below for the range of 'C' hyperparameter values.
 
 ![Alt text](https://github.com/kcao22/credit_card_defaults/blob/main/Visualizations/variance_in_splits.png)
 
-### Decision Tree & Random Forest
+### Decision Tree
 
-Next, a single decision tree model is explored. Cross validation with a range of 'max_depth' values ranging between 1 and 12 are explored. To prevent obvious scenarios of overfitting, the max leaves are considered relative to the maxiumum number of positive samples. Given that the 'max_depth' is limited to a level of 12. Given that there are  
+Next, a single decision tree model is explored. Cross validation with a range of 'max_depth' values ranging between 1 and 12 are explored. To prevent obvious scenarios of overfitting, the max leaves are considered relative to the maxiumum number of positive samples. For my cross validation splits, I am using 3/4 of the training dataset to fit the model and the remaining 1/4 of the training set as validation set to evaluate ROC AUC scores for the model. Given this knowledge, with an 80/20 split of the total data into training and testing datasets, the training dataset will contain approximately 21,331 records. With a 75/25 split in the stratified cross validation process, the varying fitting datasets will contain approximately 16,000 samples. A maximum overfit model would have a single leaf for each training sample. With $$2^{n}$$ leaves for 'n' levels of max depth, setting $$2^{n}$$ = 16,000 and evaluating for 'n' using $$\log_2 16000$$ yields a maximum depth of 12. Therefore for the hyperparameter optimizaation of 'max_depth', I will use a range of 1 to 12. Visualizing the results, overfitting occurs after a 'max_depth' value of 2.
 
+![Alt text](https://github.com/kcao22/credit_card_defaults/blob/main/Visualizations/rf_max_depth_single_param_overfitting_ex.png)
 
-In the 
-This provides insight on ballpark ranges for optimizing each parameter and ensuring no overfitting occurs. Below is an example of overfitting for a parameter.
+Optimizing the 'max_depth' value boosts the cross validation ROC AUC values up to ~0.74, a slight increase from logistic regression.
 
-![alt text](https://github.com/kcao22/webscraping_ds_salaries/blob/main/images/max_depth%20overfitting.png "Outliers")
+With how easily a single Decision Tree overfits, I will further explore the use of Random Forest ensemble models.
 
-Recursive feature elimination for random forest is then used to reduce the number of features resulting from OneHotEncoding.
+## Random Forest 
 
-My best performing Random Forest model produced a MAE score of 14.58.
+In addition to 'max_depth', 'n_estimators' is explored using the same cross validation approaches as above. This time, however, the mean fit time of the random forest ensemble model is also considered relative to the number of trees grown versus the mean ROC AUC scores. With this evaluation, I can determine if increasing the number of base models in the ensemble is worth it given the performance to fit time ratio. Below is a visual of these results. As seen, there are diminishing returns after a certain number of estimators. Once the number of decision trees grown exceeds approximately 20, the value of the mean testing ROC AUC from cross validation fluctuates up and down. Additionally, the mean run time increases linearly. Given this, an ideal number of base trees appears to be around 20 based on the range of 20 to 100 estimators. However, this may not be the optimal hyperparameter when tuned with other hyperparameters. This merely serves the purpose of another factor to consider when exploting features individually.
 
-## Interactive Web Page Estimation Tool
+![Alt text](https://github.com/kcao22/credit_card_defaults/blob/main/Visualizations/rf_runtime_num_trees.png)
 
-As a final step, an interactive web page was produced using Gradio where a user can input job posting information. The web page then returns a predicted salary for the job posting. To see this in action, view the .gif at the top of README. If you would like to use the web interface yourself, please run gradio_gui.py in Python terminal to host the page locally.
-![Alt Text](https://github.com/kcao22/webscraping_ds_salaries/blob/main/images/terminal_gradio.gif)
+Another visualization to determine the optimal combination of hyperparameters optimized is the checkerboard model, pairing 'max_depth' feature alongside 'n_estimators' along with a colorbar representing the average validation ROC AUC scores and serving as a z-axis. From the image, I can determine that a combination of 'max_depth' = 9 and 'n_estimators' of 200 yields the highest ROC AUC of ~0.78.
+
+![Alt text](https://github.com/kcao22/credit_card_defaults/blob/main/Visualizations/rf_pair_plot_checkerboard_graph.png)
+
+Random forest feature importance can also be viewed based on the significance of a feature in growing the base estimator decision trees and reducing node impurity. As seen in the below visual, 'PAY_1', 'LIMIT_BAL', and the various 'PAY_#' features continue to show the greatest significance in predicting if an account defaults on payment in the coming month.
+
+![Alt text](https://github.com/kcao22/credit_card_defaults/blob/main/Visualizations/rf_feature_imp.png)
+
+## Model Performance Confirmation
+
+To validate the model performance, I also plotted the predicted probability of defaulting alongside default rates in a decile and binned manner. Below is a visual of predicted probability rates of the test set divided into deciles, and then plotted against actual default rates according to each decile probability bin. In doing so, I can see that as the decile of predicted probability of default increases, so does default rate.
+
+![Alt text](https://github.com/kcao22/credit_card_defaults/blob/main/Visualizations/financial_analysis_decile_default_rate.png)
+
+A further plot of equally binned ranges of predicted probability rather than deciles can be seen below, with the same confirmation that the model correctly predicts a higher number of defaults for actually defaulting accounts.
+
+![Alt text](https://github.com/kcao22/credit_card_defaults/blob/main/Visualizations/financial_analysis_binned_prob_default_rate.png)
+
+An expected calibration error (ECE) plot was also created to determine the accuracy of the model fitting process. This was done using mean probabilities from the actual test set and the predicted probabilities grouped by prediction probability deciles. The ECE can be monitored in future model deployment to determine if 
+
+## Financial Analysis
+
+Finally, a financial analysis is provided to the client based on the test set results with the tuned Random Forest model. 
+
+Below is a visual produced based on the case study's costs and average success of calling to settle account payments. With the Random Forest model providing ROC AUC values as a metric of success, it is vital to determine which threshold in the ROC AUC graph would provide the highest number of true positives identified relative to the cost per call and false positives. Below, a graph of thresholds along with net savings is calculated and a threshold of 0.24 for the model would generate the highest savings for the company. This would yield savings of NT $15,767,877.  
+
+![Alt text](https://github.com/kcao22/credit_card_defaults/blob/main/Visualizations/financial_analysis_net_savings_positive_threshold.png)
+
+Costs also need to be taken into account relative to savings. A visual of this is also provided below. To generate the greatest savings, an upfront investment of ~ NT $2000 is needed per account.
+
+![Alt text](https://github.com/kcao22/credit_card_defaults/blob/main/Visualizations/financial_analysis_net_savings_vs_cost.png)
