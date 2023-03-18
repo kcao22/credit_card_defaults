@@ -21,8 +21,7 @@ Inspiration & Guidance Credit: https://github.com/TrainingByPackt/Data-Science-P
  - **Python Version**: 3.9
  - **Main Packages**: Matplotlib, Pandas, scikit-learn, seaborn
  - **Environment Requirements**: conda env create -f environment.yml
- - **Data Cleaning Ideas**: https://github.com/PlayingNumbers/ds_salary_proj
-
+ 
  ## Data Cleaning and Quality Check
 
  Before beginning any model building, dataset exploration was performed to understand the data at hand. Furthermore, data quality checks were performed to ensure soundness of dataset. Below is a list of different data quality issues that required cleaning.
